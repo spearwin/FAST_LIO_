@@ -156,7 +156,7 @@ void Preprocess::avia_handler(const livox_ros_driver::CustomMsg::ConstPtr &msg)
   }
   else
   {
-    for(uint i=1; i<plsize; i++)
+    for(uint i=1; i<plsize; i++)  // plsize: point의 개수
     {
       if((msg->points[i].line < N_SCANS) && ((msg->points[i].tag & 0x30) == 0x10 || (msg->points[i].tag & 0x30) == 0x00))
       {
