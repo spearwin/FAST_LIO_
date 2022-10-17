@@ -339,14 +339,16 @@ void ImuProcess::Process(const MeasureGroup &meas,  esekfom::esekf<state_ikfom, 
   double t1,t2,t3;
   t1 = omp_get_wtime();
 
-  if(meas.imu.empty()) {return;};
+  if(meas.imu.empty()) {
+  cout << "imu deque is empty" << endl;
+  return;
+  };
   ROS_ASSERT(meas.lidar != nullptr);
-
+  //cout << "imu_need_init_ : " << imu_need_init_ << endl;
   if (imu_need_init_)
   {
     /// The very first lidar frame
-    IMU_init(meas, kf_state, init_iter_num);
-
+    IMU_init(meas, kf_state, init_iter_num);    
     imu_need_init_ = true;
     
     last_imu_   = meas.imu.back();
@@ -354,6 +356,10 @@ void ImuProcess::Process(const MeasureGroup &meas,  esekfom::esekf<state_ikfom, 
     state_ikfom imu_state = kf_state.get_x();
     if (init_iter_num > MAX_INI_COUNT)
     {
+      cout << "init_iter_num > MAX_INI_COUNT" << endl;
+      cout << "init_iter_num : " << init_iter_num << endl;
+      cout << "MAX_INI_COUNT : " << MAX_INI_COUNT << endl;
+      
       cov_acc *= pow(G_m_s2 / mean_acc.norm(), 2);
       imu_need_init_ = false;
 
@@ -363,6 +369,10 @@ void ImuProcess::Process(const MeasureGroup &meas,  esekfom::esekf<state_ikfom, 
       // ROS_INFO("IMU Initial Done: Gravity: %.4f %.4f %.4f %.4f; state.bias_g: %.4f %.4f %.4f; acc covarience: %.8f %.8f %.8f; gry covarience: %.8f %.8f %.8f",\
       //          imu_state.grav[0], imu_state.grav[1], imu_state.grav[2], mean_acc.norm(), cov_bias_gyr[0], cov_bias_gyr[1], cov_bias_gyr[2], cov_acc[0], cov_acc[1], cov_acc[2], cov_gyr[0], cov_gyr[1], cov_gyr[2]);
       fout_imu.open(DEBUG_FILE_DIR("imu.txt"),ios::out);
+    }
+    else {
+    cout << "init_iter_num : " << init_iter_num << endl;
+    cout << "MAX_INI_COUNT : " << MAX_INI_COUNT << endl;
     }
 
     return;

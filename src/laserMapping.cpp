@@ -303,16 +303,16 @@ void livox_pcl_cbk(const livox_ros_driver::CustomMsg::ConstPtr &msg)
     mtx_buffer.lock();
     double preprocess_start_time = omp_get_wtime();
     scan_count ++;
-    if (msg->header.stamp.toSec() < last_timestamp_lidar)
+    if (msg->header_real.stamp.toSec() < last_timestamp_lidar)
     {
         ROS_ERROR("lidar loop back, clear buffer");
         lidar_buffer.clear();
     }
-    last_timestamp_lidar = msg->header.stamp.toSec();
+    last_timestamp_lidar = msg->header_real.stamp.toSec();
     
     if (!time_sync_en && abs(last_timestamp_imu - last_timestamp_lidar) > 10.0 && !imu_buffer.empty() && !lidar_buffer.empty() )
     {
-        printf("IMU and LiDAR not Synced, IMU time: %lf, lidar header time: %lf \n",last_timestamp_imu, last_timestamp_lidar);
+        printf("IMU and LiDAR not Synced, IMU time: %lf, lidar header_real time: %lf \n",last_timestamp_imu, last_timestamp_lidar);
     }
 
     if (time_sync_en && !timediff_set_flg && abs(last_timestamp_lidar - last_timestamp_imu) > 1 && !imu_buffer.empty())
@@ -885,7 +885,7 @@ int main(int argc, char** argv)
 
             if (feats_undistort->empty() || (feats_undistort == NULL))
             {
-                ROS_WARN("No point, skip this scan!\n");
+                ROS_WARN("No point, feature_undistort is empty, skip this scan!\n");
                 continue;
             }
 
@@ -917,7 +917,10 @@ int main(int argc, char** argv)
             int featsFromMapNum = ikdtree.validnum();
             kdtree_size_st = ikdtree.size();
             
-            // cout<<"[ mapping ]: In num: "<<feats_undistort->points.size()<<" downsamp "<<feats_down_size<<" Map num: "<<featsFromMapNum<<"effect num:"<<effct_feat_num<<endl;
+            float rate = effct_feat_num / feats_down_size;
+            cout << "[ mapping ]: In num: " << feats_undistort->points.size() << ", downsample num: " << feats_down_size 
+            	<< ", effect num: " << effct_feat_num << ", effective rate : " << rate
+            	<< ", Map num: " << featsFromMapNum << endl;
 
             /*** ICP and iterated Kalman filter update ***/
             if (feats_down_size < 5)

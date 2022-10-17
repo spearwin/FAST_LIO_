@@ -2,7 +2,7 @@ common:
     lid_topic:  "/livox/lidar"
     imu_topic:  "/imu/data"
     time_sync_en: false       # ONLY turn on when external time synchronization is really not possible
-    time_offset_lidar_to_imu: 1664343978.199520 # Time offset between lidar and IMU calibrated by other algorithms, e.g. LI-Init (can be found in README).
+    time_offset_lidar_to_imu: -0.087317 # Time offset between lidar and IMU calibrated by other algorithms, e.g. LI-Init (can be found in README).
                                   # This param will take effect no matter what time_sync_en is. So if the time offset is not known exactly, please set as 0.0
 
 preprocess:
@@ -16,17 +16,17 @@ mapping:
     b_acc_cov: 0.0001
     b_gyr_cov: 0.0001
     fov_degree:    70
-    det_range:     200.0
+    det_range:     100.0
     extrinsic_est_en:  false      # true: enable the online estimation of IMU-LiDAR extrinsic
-    extrinsic_T: [ -0.012772, -0.071781,  0.037707 ]
-    extrinsic_R: [ 0.999911, -0.004092, -0.012677,
-                   0.004671,  0.998931,  0.045981,
-                   0.012475, -0.046036,  0.998862]
+    extrinsic_T: [ 0.095903, 0.000157, 0.099246 ]
+    extrinsic_R: [ 0.999934, -0.008018, -0.008222,
+                   0.008205,  0.999703,  0.022960,
+                   0.008035, -0.023026,  0.999703]
 
 publish:
-    path_en:  false
+    path_en:  true
     scan_publish_en:  true       # false: close all the point cloud output
-    dense_publish_en: true       # false: low down the points number in a global-frame point clouds scan.
+    dense_publish_en: false       # false: low down the points number in a global-frame point clouds scan.
     scan_bodyframe_pub_en: true  # true: output the point cloud scans in IMU-body-frame
 
 pcd_save:
