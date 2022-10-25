@@ -180,6 +180,7 @@ void Preprocess::avia_handler(const livox_ros_driver::CustomMsg::ConstPtr &msg)
       }
     }
   }
+  std::cout << "pl_surf : " << pl_surf.size() << " pl_corn : " << pl_corn.size() << " pl_full : " << pl_full.size() << std::endl;
 }
 
 void Preprocess::oust64_handler(const sensor_msgs::PointCloud2::ConstPtr &msg)

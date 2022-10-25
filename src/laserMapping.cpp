@@ -322,6 +322,9 @@ void livox_pcl_cbk(const livox_ros_driver::CustomMsg::ConstPtr &msg)
         printf("Self sync IMU and LiDAR, time diff is %.10lf \n", timediff_lidar_wrt_imu);
     }
 
+    printf("Num of Pointcloud : %i, ", msg->point_num);
+
+    
     PointCloudXYZI::Ptr  ptr(new PointCloudXYZI());
     p_pre->process(msg, ptr);
     lidar_buffer.push_back(ptr);
@@ -919,7 +922,7 @@ int main(int argc, char** argv)
             
             float rate = effct_feat_num / feats_down_size;
             cout << "[ mapping ]: In num: " << feats_undistort->points.size() << ", downsample num: " << feats_down_size 
-            	<< ", effect num: " << effct_feat_num << ", effective rate : " << rate
+            	<< ", effect num: " << effct_feat_num /*<< ", effective rate : " << rate*/
             	<< ", Map num: " << featsFromMapNum << endl;
 
             /*** ICP and iterated Kalman filter update ***/
