@@ -94,6 +94,7 @@ int    iterCount = 0, feats_down_size = 0, NUM_MAX_ITERATIONS = 0, laserCloudVal
 bool   point_selected_surf[100000] = {0};
 bool   lidar_pushed, flg_first_scan = true, flg_exit = false, flg_EKF_inited;
 bool   scan_pub_en = false, dense_pub_en = false, scan_body_pub_en = false;
+bool   backward_propagation = true;
 
 vector<vector<int>>  pointSearchInd_surf; 
 vector<BoxPointType> cub_needrm;
@@ -322,9 +323,6 @@ void livox_pcl_cbk(const livox_ros_driver::CustomMsg::ConstPtr &msg)
         printf("Self sync IMU and LiDAR, time diff is %.10lf \n", timediff_lidar_wrt_imu);
     }
 
-    printf("Num of Pointcloud : %i, ", msg->point_num);
-
-    
     PointCloudXYZI::Ptr  ptr(new PointCloudXYZI());
     p_pre->process(msg, ptr);
     lidar_buffer.push_back(ptr);
@@ -783,14 +781,16 @@ int main(int argc, char** argv)
     nh.param<int>("preprocess/timestamp_unit", p_pre->time_unit, US);
     nh.param<int>("preprocess/scan_rate", p_pre->SCAN_RATE, 10);
     nh.param<int>("point_filter_num", p_pre->point_filter_num, 2);
-    nh.param<bool>("feature_extract_enable", p_pre->feature_enabled, false);
+    nh.param<bool>("feature_extract_enable", p_pre->feature_enabled, true);
+    nh.param<bool>("backward_propagation", backward_propagation, true);
     nh.param<bool>("runtime_pos_log_enable", runtime_pos_log, 0);
     nh.param<bool>("mapping/extrinsic_est_en", extrinsic_est_en, true);
     nh.param<bool>("pcd_save/pcd_save_en", pcd_save_en, false);
     nh.param<int>("pcd_save/interval", pcd_save_interval, -1);
     nh.param<vector<double>>("mapping/extrinsic_T", extrinT, vector<double>());
     nh.param<vector<double>>("mapping/extrinsic_R", extrinR, vector<double>());
-    cout<<"p_pre->lidar_type "<<p_pre->lidar_type<<endl;
+    cout << "p_pre->lidar_type " << p_pre->lidar_type << endl;
+    cout << "Backward Propagation : " << backward_propagation << endl;
     
     path.header.stamp    = ros::Time::now();
     path.header.frame_id ="camera_init";
@@ -819,6 +819,7 @@ int main(int argc, char** argv)
     p_imu->set_acc_cov(V3D(acc_cov, acc_cov, acc_cov));
     p_imu->set_gyr_bias_cov(V3D(b_gyr_cov, b_gyr_cov, b_gyr_cov));
     p_imu->set_acc_bias_cov(V3D(b_acc_cov, b_acc_cov, b_acc_cov));
+    p_imu->set_backward_propagation(backward_propagation);
 
     double epsi[23] = {0.001};
     fill(epsi, epsi+23, 0.001);
@@ -920,10 +921,8 @@ int main(int argc, char** argv)
             int featsFromMapNum = ikdtree.validnum();
             kdtree_size_st = ikdtree.size();
             
-            float rate = effct_feat_num / feats_down_size;
             cout << "[ mapping ]: In num: " << feats_undistort->points.size() << ", downsample num: " << feats_down_size 
-            	<< ", effect num: " << effct_feat_num /*<< ", effective rate : " << rate*/
-            	<< ", Map num: " << featsFromMapNum << endl;
+            	<< ", effect num: " << effct_feat_num << ", Map num: " << featsFromMapNum << endl;
 
             /*** ICP and iterated Kalman filter update ***/
             if (feats_down_size < 5)

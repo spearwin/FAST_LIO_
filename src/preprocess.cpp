@@ -4,7 +4,7 @@
 #define RETURN0AND1 0x10
 
 Preprocess::Preprocess()
-  :feature_enabled(0), lidar_type(AVIA), blind(0.01), point_filter_num(1)
+  :feature_enabled(0), lidar_type(AVIA), blind(0.01), point_filter_num(1), back_propagation(1)
 {
   inf_bound = 10;
   N_SCANS   = 6;
@@ -76,6 +76,10 @@ void Preprocess::process(const sensor_msgs::PointCloud2::ConstPtr &msg, PointClo
 
   case VELO16:
     velodyne_handler(msg);
+    break;
+
+  case DEPTH_SENSOR:
+    depth_handler(msg);
     break;
   
   default:
@@ -180,7 +184,6 @@ void Preprocess::avia_handler(const livox_ros_driver::CustomMsg::ConstPtr &msg)
       }
     }
   }
-  std::cout << "pl_surf : " << pl_surf.size() << " pl_corn : " << pl_corn.size() << " pl_full : " << pl_full.size() << std::endl;
 }
 
 void Preprocess::oust64_handler(const sensor_msgs::PointCloud2::ConstPtr &msg)
@@ -450,6 +453,34 @@ void Preprocess::velodyne_handler(const sensor_msgs::PointCloud2::ConstPtr &msg)
         }
       }
     }
+}
+
+void Preprocess::depth_handler(const sensor_msgs::PointCloud2::ConstPtr &msg) // it does not support feature extration mode
+{
+  pl_surf.clear();
+  pl_corn.clear();
+  pl_full.clear();
+  pcl::PointCloud<pcl::PointXYZRGB> pl_orig;
+  pcl::fromROSMsg(*msg, pl_orig);
+  int plsize = pl_orig.size();
+  pl_corn.reserve(plsize);
+  pl_surf.reserve(plsize);
+  for (int i = 0; i < pl_orig.points.size(); i++) {
+      if (i % point_filter_num != 0) continue;
+      double range = pl_orig.points[i].x * pl_orig.points[i].x + pl_orig.points[i].y * pl_orig.points[i].y +
+                     pl_orig.points[i].z * pl_orig.points[i].z;
+      if (range < blind * blind) continue;
+      Eigen::Vector3d pt_vec;
+      PointType added_pt;
+      added_pt.x = pl_orig.points[i].x;
+      added_pt.y = pl_orig.points[i].y;
+      added_pt.z = pl_orig.points[i].z;
+      added_pt.normal_x = pl_orig.points[i].r;
+      added_pt.normal_y = pl_orig.points[i].g;
+      added_pt.normal_z = pl_orig.points[i].b;
+      added_pt.curvature = 0.0;
+      pl_surf.points.push_back(added_pt);
+  }
 }
 
 void Preprocess::give_feature(pcl::PointCloud<PointType> &pl, vector<orgtype> &types)
